@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搜索 - StreamFlix</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/jpeg" href="favicon.jpg">
+    <style>
+        .search-header {
+            background: white;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .search-box {
+            display: flex;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .search-input-large {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid var(--primary-color);
+            border-right: none;
+            border-radius: 4px 0 0 4px;
+            font-size: 16px;
+        }
+        
+        .search-btn-large {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0 25px;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .search-filters {
+            background: white;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .filter-tabs {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .filter-tab {
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 15px;
+            transition: all 0.3s;
+        }
+        
+        .filter-tab.active {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .search-results {
+            padding: 20px;
+        }
+        
+        .result-section {
+            margin-bottom: 30px;
+        }
+        
+        .result-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .user-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .user-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .user-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 10px;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+        
+        .search-history {
+            background: white;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        
+        .history-item {
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            transition: background 0.2s;
+        }
+
+        .history-item:hover {
+            background: var(--bg-color);
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
+        .history-clear {
+            color: var(--primary-color);
+            cursor: pointer;
+            text-align: right;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+
+        .history-clear:hover {
+            text-decoration: underline;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .search-box {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .search-input-large {
+                border: 2px solid var(--primary-color);
+                border-radius: 4px;
+            }
+            
+            .search-btn-large {
+                border-radius: 4px;
+                padding: 12px;
+            }
+            
+            .filter-tabs {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            
+            .user-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <h2><img src="favicon.jpg", width="50px", height="50px">StreamFlix</h2>
+            <ul class="sidebar-nav">
+                <li class="nav-item" data-page="home">
+                    <span class="nav-icon">🏠</span>首页
+                </li>
+                <li class="nav-item" data-page="hot">
+                    <span class="nav-icon">🔥</span>热门
+                </li>
+                <li class="nav-item" data-page="categories">
+                    <span class="nav-icon">📁</span>分类
+                </li>
+                <li class="nav-item" data-page="dynamic">
+                    <span class="nav-icon">📝</span>动态
+                </li>
+                <li class="nav-item" data-page="favorites">
+                    <span class="nav-icon">⭐</span>收藏
+                </li>
+                <li class="nav-item" data-page="history">
+                    <span class="nav-icon">🕒</span>历史
+                </li>
+                <li class="nav-item" data-page="messages">
+                    <span class="nav-icon">💌</span>消息
+                </li>
+                <li class="nav-item" data-page="profile">
+                    <span class="nav-icon">👤</span>个人主页
+                </li>
+                <li class="nav-item" data-page="upload">
+                    <span class="nav-icon">📤</span>投稿
+                </li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-search">
+                    <input type="text" class="search-input" placeholder="搜索视频、UP主..." id="headerSearch">
+                </div>
+                <div class="header-actions" id="headerActions">
+                    <!-- 由JavaScript动态填充 -->
+                </div>
+            </header>
+
+            <div class="content-area">
+                <div class="search-header">
+                    <div class="search-box">
+                        <input type="text" class="search-input-large" id="mainSearch" placeholder="搜索视频、UP主...">
+                        <button class="search-btn-large" onclick="performSearch(document.getElementById('mainSearch').value)">搜索</button>
+                    </div>
+                </div>
+
+                <div class="search-filters">
+                    <div class="filter-tabs">
+                        <div class="filter-tab active" data-filter="all">全部</div>
+                        <div class="filter-tab" data-filter="videos">视频</div>
+                        <div class="filter-tab" data-filter="users">用户</div>
+                        <div class="filter-tab" data-filter="tags">标签</div>
+                    </div>
+                </div>
+
+                <div class="search-results">
+                    <!-- 搜索历史 -->
+                    <div class="search-history" id="searchHistorySection">
+                        <div class="result-title">搜索历史</div>
+                        <div id="searchHistoryList">
+                            <!-- 搜索历史将通过JavaScript动态加载 -->
+                        </div>
+                        <div class="history-clear" onclick="clearSearchHistory()">清空搜索历史</div>
+                    </div>
+
+                    <!-- 搜索结果 -->
+                    <div id="searchResults">
+                        <div class="no-results" id="noResults">
+                            <p>输入关键词搜索视频或用户</p>
+                        </div>
+
+                        <!-- 视频结果 -->
+                        <div class="result-section" id="videoResults" style="display: none;">
+                            <div class="result-title">视频</div>
+                            <div class="video-grid" id="videoResultsGrid">
+                                <!-- 搜索结果视频将通过JavaScript动态加载 -->
+                            </div>
+                        </div>
+
+                        <!-- 用户结果 -->
+                        <div class="result-section" id="userResults" style="display: none;">
+                            <div class="result-title">用户</div>
+                            <div class="user-grid" id="userResultsGrid">
+                                <!-- 搜索结果用户将通过JavaScript动态加载 -->
+                            </div>
+                        </div>
+
+                        <!-- 标签结果 -->
+                        <div class="result-section" id="tagResults" style="display: none;">
+                            <div class="result-title">标签</div>
+                            <div id="tagResultsList">
+                                <!-- 标签结果将通过JavaScript动态加载 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 修复JavaScript引用路径 -->
+    <script defer src="js/dataManager.js"></script>
+    <script defer src="js/auth.js"></script>
+    <script defer src="js/navigation.js"></script>
+    <script defer src="js/hotfix.js"></script>
+    <script defer src="js/search.js"></script>
+</body>
+</html>

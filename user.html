@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户主页 - StreamFlix</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/jpeg" href="favicon.jpg">
+    <!-- 样式已迁移至 style.css -->
+</head>
+<body>
+    <div class="app-container">
+        <h2><img src="favicon.jpg", width="50px", height="50px">StreamFlix</h2>
+        <aside class="sidebar">
+            <ul class="sidebar-nav">
+                <li class="nav-item" data-page="home">
+                    <span class="nav-icon">🏠</span>首页
+                </li>
+                <li class="nav-item" data-page="hot">
+                    <span class="nav-icon">🔥</span>热门
+                </li>
+                <li class="nav-item" data-page="categories">
+                    <span class="nav-icon">📁</span>分类
+                </li>
+                <li class="nav-item" data-page="dynamic">
+                    <span class="nav-icon">📝</span>动态
+                </li>
+                <li class="nav-item" data-page="favorites">
+                    <span class="nav-icon">⭐</span>收藏
+                </li>
+                <li class="nav-item" data-page="history">
+                    <span class="nav-icon">🕒</span>历史
+                </li>
+                <li class="nav-item" data-page="messages">
+                    <span class="nav-icon">💌</span>消息
+                </li>
+                <li class="nav-item" data-page="profile">
+                    <span class="nav-icon">👤</span>个人主页
+                </li>
+                <li class="nav-item" data-page="upload">
+                    <span class="nav-icon">📤</span>投稿
+                </li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-search">
+                    <input type="text" class="search-input" placeholder="搜索视频、UP主..." id="headerSearch">
+                </div>
+                <div class="header-actions" id="headerActions">
+                    <!-- 由JavaScript动态填充 -->
+                </div>
+            </header>
+
+            <div class="content-area">
+                <div id="userProfileContent">
+                    <div class="loading-state">
+                        <p>加载用户信息中...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 修复JavaScript引用路径 -->
+    <script defer src="js/dataManager.js"></script>
+    <script defer src="js/auth.js"></script>
+    <script defer src="js/navigation.js"></script>
+    <script defer src="js/hotfix.js"></script>
+    <script defer src="js/user.js"></script>
+</body>
+</html>

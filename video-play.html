@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视频播放 - StreamFlix</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/jpeg" href="favicon.jpg">
+    <style>
+        .video-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+        
+        .video-player-container {
+            background: black;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        #mainVideo {
+            width: 100%;
+            max-height: 500px;
+            background: #000;
+        }
+        
+        .video-info {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .video-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .video-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+        }
+        
+        .video-actions {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 8px 15px;
+            border-radius: 4px;
+            transition: background 0.3s;
+            font-size: 14px;
+        }
+        
+        .action-btn:hover {
+            background: var(--bg-color);
+        }
+        
+        .action-btn.active {
+            color: var(--primary-color);
+        }
+        
+        .video-description {
+            line-height: 1.6;
+            margin-bottom: 15px;
+            white-space: pre-line;
+        }
+        
+        .video-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .tag {
+            background: var(--bg-color);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.9em;
+            color: var(--secondary-color);
+            cursor: pointer;
+        }
+        
+        .tag:hover {
+            background: #e0e0e0;
+        }
+        
+        .recommendations {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            position: sticky;
+            top: 80px;
+        }
+        
+        .recommendation-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .video-author {
+            color: var(--primary-color);
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .video-author:hover {
+            text-decoration: underline;
+        }
+        
+        .video-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9em;
+        }
+        
+        .like-count, .favorite-count {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .video-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            color: var(--text-secondary);
+        }
+
+        /* 评论区样式 */
+        .comments-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .comments-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .comment-form {
+            margin-bottom: 20px;
+        }
+
+        .comment-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+        }
+
+        .comment-submit {
+            margin-top: 10px;
+            text-align: right;
+        }
+
+        .comment-item {
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .comment-item:last-child {
+            border-bottom: none;
+        }
+
+        .no-comments {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+        
+        @media (max-width: 768px) {
+            .video-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .recommendations {
+                position: static;
+            }
+            
+            .video-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .video-actions {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <h2><img src="favicon.jpg", width="50px", height="50px">StreamFlix</h2>
+            <ul class="sidebar-nav">
+                <li class="nav-item" data-page="home">
+                    <span class="nav-icon">🏠</span>首页
+                </li>
+                <li class="nav-item" data-page="hot">
+                    <span class="nav-icon">🔥</span>热门
+                </li>
+                <li class="nav-item" data-page="categories">
+                    <span class="nav-icon">📁</span>分类
+                </li>
+                <li class="nav-item" data-page="dynamic">
+                    <span class="nav-icon">📝</span>动态
+                </li>
+                <li class="nav-item" data-page="favorites">
+                    <span class="nav-icon">⭐</span>收藏
+                </li>
+                <li class="nav-item" data-page="history">
+                    <span class="nav-icon">🕒</span>历史
+                </li>
+                <li class="nav-item" data-page="messages">
+                    <span class="nav-icon">💌</span>消息
+                </li>
+                <li class="nav-item" data-page="profile">
+                    <span class="nav-icon">👤</span>个人主页
+                </li>
+                <li class="nav-item" data-page="upload">
+                    <span class="nav-icon">📤</span>投稿
+                </li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-search">
+                    <input type="text" class="search-input" placeholder="搜索视频、UP主..." id="headerSearch">
+                </div>
+                <div class="header-actions" id="headerActions">
+                    <!-- 由JavaScript动态填充 -->
+                </div>
+            </header>
+
+            <div class="content-area">
+                <div class="video-container">
+                    <div class="video-main">
+                        <!-- 视频播放器 -->
+                        <div class="video-player-container">
+                            <div id="videoLoading" class="video-loading" style="display: none;">
+                                <p>正在加载视频...</p>
+                            </div>
+                            <video id="mainVideo" controls>
+                                您的浏览器不支持视频播放。
+                            </video>
+                        </div>
+
+                        <!-- 视频信息 -->
+                        <div class="video-info">
+                            <div class="video-title" id="videoTitle">视频标题加载中...</div>
+                            
+                            <div class="video-meta">
+                                <div>
+                                    <span class="video-author" id="videoAuthor">作者</span>
+                                    <span>•</span>
+                                    <span id="videoViews">0 播放</span>
+                                    <span>•</span>
+                                    <span id="videoUploadTime">上传时间</span>
+                                </div>
+                                <div class="video-stats">
+                                    <div class="like-count">
+                                        <span>👍</span>
+                                        <span id="likeCount">0</span>
+                                    </div>
+                                    <div class="favorite-count">
+                                        <span>⭐</span>
+                                        <span id="favoriteCount">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="video-actions">
+                                <button class="action-btn" id="likeBtn">
+                                    <span>🤍</span>
+                                    <span>点赞</span>
+                                </button>
+                                <button class="action-btn" id="favoriteBtn">
+                                    <span>☆</span>
+                                    <span>收藏</span>
+                                </button>
+                                <button class="action-btn" id="shareBtn">
+                                    <span>📤</span>
+                                    <span>分享</span>
+                                </button>
+                            </div>
+                            
+                            <div class="video-description" id="videoDescription">
+                                视频描述加载中...
+                            </div>
+                            
+                            <div class="video-tags" id="videoTags">
+                                <!-- 标签将通过JavaScript动态加载 -->
+                            </div>
+                        </div>
+
+                        <!-- 评论区 -->
+                        <div class="comments-section">
+                            <div class="comments-title">评论</div>
+                            
+                            <!-- 评论表单 -->
+                            <form class="comment-form" id="commentForm">
+                                <textarea class="comment-input" id="commentInput" placeholder="发表你的评论..."></textarea>
+                                <div class="comment-submit">
+                                    <button type="submit" class="btn btn-primary">发表评论</button>
+                                </div>
+                            </form>
+
+                            <!-- 评论列表 -->
+                            <div id="commentsList">
+                                <!-- 评论将通过JavaScript动态加载 -->
+                            </div>
+                            
+                            <div class="no-comments" id="noComments">
+                                <p>还没有评论，快来抢沙发吧～</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="video-sidebar">
+                        <div class="recommendations">
+                            <div class="recommendation-title">推荐视频</div>
+                            <div class="video-grid" id="recommendedVideos">
+                                <div class="loading-state">
+                                    <p>正在加载推荐视频...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 修复JavaScript引用路径 -->
+    <script defer src="js/dataManager.js"></script>
+    <script defer src="js/auth.js"></script>
+    <script defer src="js/navigation.js"></script>
+    <script defer src="js/hotfix.js"></script>
+    <script defer src="js/storageManager.js"></script>
+    <script defer src="js/video-play.js"></script>
+</body>
+</html>

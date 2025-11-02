@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>观看历史 - StreamFlix</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/jpeg" href="favicon.jpg">
+    <style>
+        .history-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .history-stats {
+            color: var(--text-secondary);
+        }
+        
+        .history-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .history-list {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .history-item {
+            display: flex;
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.3s;
+            align-items: flex-start;
+        }
+        
+        .history-item:hover {
+            background: var(--bg-color);
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
+        .history-thumbnail {
+            width: 160px;
+            height: 90px;
+            border-radius: 4px;
+            object-fit: cover;
+            margin-right: 15px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        
+        .history-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .history-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            cursor: pointer;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.4;
+        }
+        
+        .history-meta {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-bottom: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .history-progress {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        
+        .progress-bar {
+            flex: 1;
+            height: 4px;
+            background: var(--border-color);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-color);
+            transition: width 0.3s;
+        }
+        
+        .progress-text {
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            min-width: 60px;
+            text-align: right;
+        }
+        
+        .history-actions-item {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            flex-shrink: 0;
+            margin-left: 15px;
+        }
+        
+        .history-delete {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        
+        .history-delete:hover {
+            color: #ff4757;
+            background: rgba(255, 71, 87, 0.1);
+        }
+        
+        .empty-history {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+        
+        .history-filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .history-filter {
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+        
+        .history-filter.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .history-filter:hover:not(.active) {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .history-item.edit-mode {
+            background: rgba(255, 71, 87, 0.05);
+        }
+        
+        .history-author {
+            color: var(--primary-color);
+            cursor: pointer;
+        }
+        
+        .history-author:hover {
+            text-decoration: underline;
+        }
+
+        .no-history-actions {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            .history-item {
+                flex-direction: column;
+            }
+            
+            .history-thumbnail {
+                width: 100%;
+                height: auto;
+                max-height: 200px;
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+            
+            .history-actions-item {
+                margin-left: 0;
+                margin-top: 10px;
+                width: 100%;
+                justify-content: flex-end;
+            }
+            
+            .history-filters {
+                gap: 10px;
+            }
+            
+            .history-filter {
+                padding: 6px 12px;
+                font-size: 0.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <h2><img src="favicon.jpg", width="50px", height="50px">StreamFlix</h2>
+            <ul class="sidebar-nav">
+                <li class="nav-item" data-page="home">
+                    <span class="nav-icon">🏠</span>首页
+                </li>
+                <li class="nav-item" data-page="hot">
+                    <span class="nav-icon">🔥</span>热门
+                </li>
+                <li class="nav-item" data-page="categories">
+                    <span class="nav-icon">📁</span>分类
+                </li>
+                <li class="nav-item" data-page="dynamic">
+                    <span class="nav-icon">📝</span>动态
+                </li>
+                <li class="nav-item" data-page="favorites">
+                    <span class="nav-icon">⭐</span>收藏
+                </li>
+                <li class="nav-item active" data-page="history">
+                    <span class="nav-icon">🕒</span>历史
+                </li>
+                <li class="nav-item" data-page="messages">
+                    <span class="nav-icon">💌</span>消息
+                </li>
+                <li class="nav-item" data-page="profile">
+                    <span class="nav-icon">👤</span>个人主页
+                </li>
+                <li class="nav-item" data-page="upload">
+                    <span class="nav-icon">📤</span>投稿
+                </li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-search">
+                    <input type="text" class="search-input" placeholder="搜索视频、UP主...">
+                </div>
+                <div class="header-actions" id="headerActions">
+                    <!-- 由JavaScript动态填充 -->
+                </div>
+            </header>
+
+            <div class="content-area">
+                <div class="history-container">
+                    <div class="history-header">
+                        <h1>观看历史</h1>
+                        <div class="history-stats">
+                            共 <span id="historyCount">0</span> 条记录
+                        </div>
+                    </div>
+
+                    <div class="history-actions">
+                        <button class="btn btn-primary" onclick="historyManager.clearAllHistory()" id="clearAllBtn">清空历史记录</button>
+                        <button class="btn btn-secondary" onclick="historyManager.toggleEditMode()" id="editModeBtn">编辑</button>
+                    </div>
+
+                    <div class="history-filters">
+                        <div class="history-filter active" data-filter="all">全部</div>
+                        <div class="history-filter" data-filter="today">今天</div>
+                        <div class="history-filter" data-filter="week">本周</div>
+                        <div class="history-filter" data-filter="month">本月</div>
+                    </div>
+
+                    <div class="history-list" id="historyList">
+                        <!-- 历史记录将通过JavaScript动态加载 -->
+                    </div>
+
+                    <div class="empty-history" id="emptyHistory" style="display: none;">
+                        <p>暂无观看历史</p>
+                        <p style="margin-top: 10px; font-size: 0.9em;">观看的视频将会出现在这里</p>
+                        <button class="btn btn-primary mt-20" onclick="window.location.href='index.html'">去首页观看视频</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script defer src="js/dataManager.js"></script>
+    <script defer src="js/auth.js"></script>
+    <script defer src="js/navigation.js"></script>
+    <script defer src="js/hotfix.js"></script>
+    <script defer src="js/history.js"></script>
+    <script defer src="js/message.js"></script>
+</body>
+</html>

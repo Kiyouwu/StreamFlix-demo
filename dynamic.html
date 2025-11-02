@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="./">
+    <title>动态 - StreamFlix</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/jpeg" href="favicon.jpg">
+    <style>
+        .dynamic-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .dynamic-composer {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .composer-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .composer-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .composer-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            resize: vertical;
+            min-height: 80px;
+            font-size: 14px;
+        }
+        
+        .composer-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .media-preview {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .media-item {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .media-item img, .media-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .media-remove {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        .dynamic-feed {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .dynamic-item {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .dynamic-item:last-child {
+            border-bottom: none;
+        }
+        
+        .dynamic-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .dynamic-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        
+        .dynamic-user {
+            flex: 1;
+        }
+        
+        .dynamic-username {
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .dynamic-time {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+        
+        .dynamic-content {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        .dynamic-media {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .dynamic-media-item {
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        
+        .dynamic-media-item img, .dynamic-media-item video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .dynamic-actions {
+            display: flex;
+            gap: 20px;
+            color: var(--text-secondary);
+        }
+        
+        .dynamic-action {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        
+        .dynamic-action:hover {
+            color: var(--primary-color);
+        }
+        
+        .dynamic-comments {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .comment-item {
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .comment-item:last-child {
+            border-bottom: none;
+        }
+        
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .comment-author {
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .comment-time {
+            color: var(--text-secondary);
+            font-size: 0.8em;
+        }
+        
+        .comment-content {
+            font-size: 0.9em;
+        }
+        
+        .comment-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+            font-size: 0.8em;
+        }
+        
+        .empty-dynamic {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+        
+        .media-upload-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        
+        .media-upload-btn:hover {
+            background: var(--bg-color);
+            color: var(--primary-color);
+        }
+
+        .comment-form {
+            margin-bottom: 15px;
+        }
+        
+        .comment-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            resize: vertical;
+            min-height: 60px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <h2><img src="favicon.jpg", width="50px", height="50px">StreamFlix</h2>
+            <ul class="sidebar-nav">
+                <li class="nav-item" data-page="home">
+                    <span class="nav-icon">🏠</span>首页
+                </li>
+                <li class="nav-item" data-page="hot">
+                    <span class="nav-icon">🔥</span>热门
+                </li>
+                <li class="nav-item" data-page="categories">
+                    <span class="nav-icon">📁</span>分类
+                </li>
+                <li class="nav-item active" data-page="dynamic">
+                    <span class="nav-icon">📝</span>动态
+                </li>
+                <li class="nav-item" data-page="favorites">
+                    <span class="nav-icon">⭐</span>收藏
+                </li>
+                <li class="nav-item" data-page="history">
+                    <span class="nav-icon">🕒</span>历史
+                </li>
+                <li class="nav-item" data-page="messages">
+                    <span class="nav-icon">💌</span>消息
+                </li>
+                <li class="nav-item" data-page="profile">
+                    <span class="nav-icon">👤</span>个人主页
+                </li>
+                <li class="nav-item" data-page="upload">
+                    <span class="nav-icon">📤</span>投稿
+                </li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-search">
+                    <input type="text" class="search-input" placeholder="搜索视频、UP主..." id="headerSearch">
+                </div>
+                <div class="header-actions" id="headerActions">
+                    <!-- 由JavaScript动态填充 -->
+                </div>
+            </header>
+
+            <div class="content-area">
+                <div class="dynamic-container">
+                    <!-- 动态发布器 -->
+                    <div class="dynamic-composer" id="dynamicComposer">
+                        <div class="composer-header">
+                            <img src="assets/default-avatar.png" alt="头像" class="composer-avatar" id="composerAvatar">
+                            <div>
+                                <div style="font-weight: bold;" id="composerUsername">发布动态</div>
+                            </div>
+                        </div>
+                        <textarea class="composer-input" id="dynamicInput" placeholder="分享你的想法..."></textarea>
+                        
+                        <div class="media-preview" id="mediaPreview">
+                            <!-- 媒体预览将通过JavaScript动态加载 -->
+                        </div>
+                        
+                        <div class="composer-actions">
+                            <div>
+                                <button class="media-upload-btn" onclick="document.getElementById('mediaUpload').click()">
+                                    📷 图片/视频
+                                </button>
+                                <input type="file" id="mediaUpload" multiple accept="image/*,video/*" style="display: none;">
+                            </div>
+                            <button class="btn btn-primary" id="publishDynamicBtn">发布</button>
+                        </div>
+                    </div>
+
+                    <!-- 动态流 -->
+                    <div class="dynamic-feed" id="dynamicFeed">
+                        <!-- 动态将通过JavaScript动态加载 -->
+                    </div>
+
+                    <div class="empty-dynamic" id="emptyDynamic" style="display: none;">
+                        <p>还没有动态</p>
+                        <p style="margin-top: 10px; font-size: 0.9em;">关注的人发布的动态会出现在这里</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 修复JavaScript引用顺序 -->
+    <script defer src="js/utils.js"></script>
+    <script defer src="js/dataManager.js"></script>
+    <script defer src="js/auth.js"></script>
+    <script defer src="js/navigation.js"></script>
+    <script defer src="js/hotfix.js"></script>
+    <script defer src="js/dynamic.js"></script>
+    
+    <!-- 添加初始化脚本 -->
+    <script>
+        // 确保所有管理器正确初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Dynamic页面初始化');
+            
+            // 手动触发导航更新
+            if (window.navigationManager) {
+                window.navigationManager.updateActiveNav();
+                window.navigationManager.updateAuthUI();
+            }
+            
+            // 确保认证状态正确
+            if (window.authManager) {
+                console.log('当前认证状态:', window.authManager.getCurrentUser());
+            }
+        });
+    </script>
+</body>
+</html>

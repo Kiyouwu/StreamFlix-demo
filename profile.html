@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人主页 - StreamFlix</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/jpeg" href="favicon.jpg">
+    <style>
+        /* 添加模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+        }
+        
+        /* 其他原有样式保持不变 */
+        .profile-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 4px solid white;
+            margin-bottom: 15px;
+            cursor: pointer;
+            object-fit: cover;
+        }
+        
+        .profile-info {
+            margin-bottom: 20px;
+        }
+        
+        .profile-username {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .profile-signature {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 15px;
+        }
+        
+        .profile-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .profile-tabs {
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .tab-nav {
+            display: flex;
+            list-style: none;
+            padding: 0 20px;
+        }
+        
+        .tab-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .tab-item.active {
+            border-bottom-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .tab-content {
+            padding: 20px;
+        }
+        
+        .edit-profile-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            cursor: pointer;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .tab-panel {
+            display: none;
+        }
+        
+        .tab-panel.active {
+            display: block;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #666;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-btn:hover {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <h2><img src="favicon.jpg", width="50px", height="50px">StreamFlix</h2>
+            <ul class="sidebar-nav">
+                <li class="nav-item" data-page="home">
+                    <span class="nav-icon">🏠</span>首页
+                </li>
+                <li class="nav-item" data-page="hot">
+                    <span class="nav-icon">🔥</span>热门
+                </li>
+                <li class="nav-item" data-page="categories">
+                    <span class="nav-icon">📁</span>分类
+                </li>
+                <li class="nav-item" data-page="dynamic">
+                    <span class="nav-icon">📝</span>动态
+                </li>
+                <li class="nav-item" data-page="favorites">
+                    <span class="nav-icon">⭐</span>收藏
+                </li>
+                <li class="nav-item" data-page="history">
+                    <span class="nav-icon">🕒</span>历史
+                </li>
+                <li class="nav-item" data-page="messages">
+                    <span class="nav-icon">💌</span>消息
+                </li>
+                <li class="nav-item active" data-page="profile">
+                    <span class="nav-icon">👤</span>个人主页
+                </li>
+                <li class="nav-item" data-page="upload">
+                    <span class="nav-icon">📤</span>投稿
+                </li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-search">
+                    <input type="text" class="search-input" placeholder="搜索视频、UP主..." id="headerSearch">
+                </div>
+                <div class="header-actions" id="headerActions">
+                    <!-- 由JavaScript动态填充 -->
+                </div>
+            </header>
+
+            <div class="content-area">
+                <div class="profile-header">
+                    <img src="assets/default-avatar.png" alt="头像" class="profile-avatar" id="profileAvatar">
+                    <div class="profile-info">
+                        <div class="profile-username" id="profileUsername">加载中...</div>
+                        <div class="profile-signature" id="profileSignature">这个人很懒，什么都没有写～</div>
+                        <button class="edit-profile-btn" onclick="profileManager.openEditProfile()">编辑资料</button>
+                    </div>
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <div class="stat-number" id="videoCount">0</div>
+                            <div class="stat-label">投稿</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="followerCount">0</div>
+                            <div class="stat-label">粉丝</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number" id="followingCount">0</div>
+                            <div class="stat-label">关注</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-tabs">
+                    <ul class="tab-nav">
+                        <li class="tab-item active" data-tab="videos">我的视频</li>
+                        <li class="tab-item" data-tab="favorites">我的收藏</li>
+                        <li class="tab-item" data-tab="dynamic">我的动态</li>
+                    </ul>
+                </div>
+
+                <div class="tab-content">
+                    <!-- 我的视频 -->
+                    <div id="videos-tab" class="tab-panel active">
+                        <h3>我的视频</h3>
+                        <div class="video-grid" id="myVideosGrid">
+                            <!-- 用户视频将通过JavaScript动态加载 -->
+                        </div>
+                        <div class="empty-state" id="noVideosMessage" style="display: none;">
+                            <p>你还没有上传过视频</p>
+                            <button class="btn btn-primary mt-20" onclick="window.location.href='upload.html'">立即投稿</button>
+                        </div>
+                    </div>
+
+                    <!-- 我的收藏 -->
+                    <div id="favorites-tab" class="tab-panel">
+                        <h3>我的收藏</h3>
+                        <div class="video-grid" id="favoritesGrid">
+                            <!-- 收藏视频将通过JavaScript动态加载 -->
+                        </div>
+                        <div class="empty-state" id="noFavoritesMessage" style="display: none;">
+                            <p>你还没有收藏任何视频</p>
+                        </div>
+                    </div>
+
+                    <!-- 我的动态 -->
+                    <div id="dynamic-tab" class="tab-panel">
+                        <h3>我的动态</h3>
+                        <div id="dynamicList">
+                            <!-- 动态将通过JavaScript动态加载 -->
+                        </div>
+                        <div class="empty-state" id="noDynamicMessage" style="display: none;">
+                            <p>你还没有发布任何动态</p>
+                            <button class="btn btn-primary mt-20" onclick="createDynamic()">发布动态</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 编辑资料模态框 -->
+    <div id="editProfileModal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0;">编辑资料</h3>
+                <button type="button" class="close-btn" onclick="profileManager.closeEditProfile()">×</button>
+            </div>
+            <form id="editProfileForm">
+                <div class="form-group">
+                    <label class="form-label">用户名</label>
+                    <input type="text" class="form-input" id="editUsername" required maxlength="20">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">个人签名</label>
+                    <textarea class="form-input" id="editSignature" rows="3" maxlength="100"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">头像</label>
+                    <input type="file" class="form-input" id="editAvatar" accept="image/*">
+                    <small style="color: #666;">支持 JPG、PNG 格式，最大 2MB</small>
+                </div>
+                <div class="form-group" style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary">保存</button>
+                    <button type="button" class="btn btn-secondary" onclick="profileManager.closeEditProfile()">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 修复JavaScript引用 -->
+    <script defer src="js/dataManager.js"></script>
+    <script defer src="js/auth.js"></script>
+    <script defer src="js/navigation.js"></script>
+    <script defer src="js/hotfix.js"></script>
+    <script defer src="js/message.js"></script>
+    <script defer src="js/profile.js"></script>
+</body>
+</html>

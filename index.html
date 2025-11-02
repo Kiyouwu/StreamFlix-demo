@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="./">
+    <title>StreamFlix - 首页</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/jpeg" href="favicon.jpg">
+    <!-- 样式已迁移至 style.css -->
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>
+                    <img src="favicon.jpg" width="40" height="40" alt="logo">
+                    <span>StreamFlix</span>
+                </h2>
+            </div>
+            <ul class="sidebar-nav">
+                <li class="nav-item" data-page="home">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-text">首页</span>
+                </li>
+                <li class="nav-item" data-page="hot">
+                    <span class="nav-icon">🔥</span>
+                    <span class="nav-text">热门</span>
+                </li>
+                <li class="nav-item" data-page="categories">
+                    <span class="nav-icon">📁</span>
+                    <span class="nav-text">分类</span>
+                </li>
+                <li class="nav-item" data-page="dynamic">
+                    <span class="nav-icon">📝</span>
+                    <span class="nav-text">动态</span>
+                </li>
+                <li class="nav-item" data-page="favorites">
+                    <span class="nav-icon">⭐</span>
+                    <span class="nav-text">收藏</span>
+                </li>
+                <li class="nav-item" data-page="history">
+                    <span class="nav-icon">🕒</span>
+                    <span class="nav-text">历史</span>
+                </li>
+                <li class="nav-item" data-page="messages">
+                    <span class="nav-icon">💌</span>
+                    <span class="nav-text">消息</span>
+                </li>
+                <li class="nav-item" data-page="profile">
+                    <span class="nav-icon">👤</span>
+                    <span class="nav-text">个人主页</span>
+                </li>
+                <li class="nav-item" data-page="upload">
+                    <span class="nav-icon">📤</span>
+                    <span class="nav-text">投稿</span>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- 主内容区域 -->
+        <main class="main-content">
+            <!-- 头部 -->
+            <header class="header">
+                <div class="header-search">
+                    <input type="text" class="search-input" placeholder="搜索视频、UP主..." id="headerSearch">
+                </div>
+                <div class="header-actions" id="headerActions">
+                    <!-- 登录状态将由JavaScript动态更新 -->
+                    <button class="btn btn-primary" onclick="window.location.href='login.html'">登录</button>
+                    <button class="btn btn-secondary" onclick="window.location.href='register.html'">注册</button>
+                </div>
+            </header>
+
+            <!-- 动态内容区域 -->
+            <div class="content-area">
+                <!-- 首页内容 -->
+                <div id="home-page" class="page active">
+                    <div class="page-header">
+                        <h1>推荐视频</h1>
+                        <button class="btn btn-secondary" onclick="homeManager.refreshVideos()">刷新</button>
+                    </div>
+                    <div class="video-grid" id="home-video-grid">
+                        <div class="loading-state" id="loadingState">
+                            <p>正在加载视频...</p>
+                        </div>
+                    </div>
+                    <div class="empty-state" id="emptyState" style="display: none;">
+                        <p>暂无视频内容</p>
+                        <button class="btn btn-primary" onclick="homeManager.refreshVideos()">
+                            重新加载
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 热门页面 -->
+                <div id="hot-page" class="page">
+                    <div class="page-header">
+                        <h1>热门视频</h1>
+                    </div>
+                    <div class="video-grid" id="hot-video-grid">
+                        <div class="loading-state">
+                            <p>正在加载热门视频...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 分类页面 -->
+                 <div id="categories-page" class="page">
+                    <div class="page-header">
+        <h1>视频分类</h1>
+    </div>
+    
+    <!-- 分类筛选区域 -->
+    <div class="category-filters">
+        <div class="filter-group">
+            <span class="filter-label">排序:</span>
+            <select class="filter-select" id="categorySortSelect">
+                <option value="newest">最新发布</option>
+                <option value="popular">最多播放</option>
+                <option value="likes">最多点赞</option>
+            </select>
+        </div>
+        
+        <div class="video-count" id="categoryVideoCount">选择分类查看视频</div>
+    </div>
+    
+    <!-- 分类内容区域 -->
+    <div class="category-content">
+        <!-- 分类列表 -->
+        <div class="category-grid" id="categories-grid">
+            <!-- 分类将通过JavaScript动态加载 -->
+            <div class="loading-state">
+                <p>正在加载分类...</p>
+            </div>
+        </div>
+        
+        <!-- 视频区域 -->
+        <div class="category-video-section" id="categoryVideoSection" style="display: none;">
+            <div class="video-grid" id="category-video-grid">
+                <div class="empty-state">
+                    <p>请选择一个分类查看视频</p>
+                </div>
+            </div>
+            
+            <div class="load-more-container" id="categoryLoadMoreContainer" style="display: none;">
+                <button class="btn btn-secondary" id="categoryLoadMoreBtn">加载更多</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- 底部区域 -->
+    <footer class="footer">
+        <p>© 2025 StreamFlixDemo - 仅用于学习和演示目的</p>
+        <p>本网站为Demo版本，未包含完整功能</p>
+    </footer>
+
+    <!-- JavaScript 文件引用 -->
+    <script defer src="js/utils.js"></script>
+    <script defer src="js/dataManager.js"></script>
+    <script defer src="js/auth.js"></script>
+    <script defer src="js/navigation.js"></script>
+    <script defer src="js/hotfix.js"></script>
+    <script defer src="js/home.js"></script>
+    <script defer src="js/search.js"></script>
+</body>
+</html>

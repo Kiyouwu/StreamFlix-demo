@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>消息中心 - StreamFlix</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/jpeg" href="favicon.jpg">
+    <style>
+        .messages-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .message-tabs {
+            display: flex;
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            overflow-x: auto;
+        }
+        
+        .message-tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+            transition: all 0.3s;
+        }
+        
+        .message-tab.active {
+            border-bottom-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .message-tab:hover:not(.active) {
+            background: var(--bg-color);
+        }
+        
+        .message-content {
+            background: white;
+            padding: 20px;
+            min-height: 500px;
+        }
+        
+        .message-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .message-item {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.3s;
+            border-left: 3px solid transparent;
+        }
+        
+        .message-item:hover {
+            background: var(--bg-color);
+        }
+        
+        .message-item.unread {
+            background: rgba(251, 114, 153, 0.05);
+            border-left-color: var(--primary-color);
+        }
+        
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .message-sender {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .message-time {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+        
+        .message-content-preview {
+            color: var(--text-secondary);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.4;
+        }
+        
+        .message-type {
+            display: inline-block;
+            padding: 2px 8px;
+            background: var(--bg-color);
+            border-radius: 10px;
+            font-size: 0.8em;
+            margin-right: 8px;
+            color: var(--text-secondary);
+        }
+        
+        .message-type.like {
+            background: rgba(251, 114, 153, 0.1);
+            color: var(--primary-color);
+        }
+        
+        .message-type.comment {
+            background: rgba(0, 161, 214, 0.1);
+            color: var(--secondary-color);
+        }
+        
+        .message-type.system {
+            background: rgba(108, 117, 125, 0.1);
+            color: #6c757d;
+        }
+        
+        .empty-messages {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+        
+        .message-detail {
+            display: none;
+        }
+        
+        .message-detail.active {
+            display: block;
+        }
+        
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            cursor: pointer;
+            margin-bottom: 15px;
+            padding: 8px 0;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .back-btn:hover {
+            text-decoration: underline;
+        }
+        
+        .message-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .message-detail-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        .related-item {
+            margin-top: 15px;
+            padding: 15px;
+            background: var(--bg-color);
+            border-radius: 8px;
+            border-left: 3px solid var(--primary-color);
+        }
+        
+        .related-video {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .related-video-cover {
+            width: 120px;
+            height: 70px;
+            border-radius: 4px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        
+        .related-video-info {
+            flex: 1;
+        }
+        
+        .related-video-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .related-video-author {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+        
+        .reply-form {
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--bg-color);
+            border-radius: 8px;
+        }
+        
+        .reply-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            resize: vertical;
+            min-height: 80px;
+            margin-bottom: 10px;
+        }
+        
+        .unread-badge {
+            background: var(--primary-color);
+            color: white;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 0.7em;
+            margin-left: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .message-tabs {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+            }
+            
+            .message-tab {
+                padding: 12px 15px;
+                font-size: 0.9em;
+            }
+            
+            .related-video {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .related-video-cover {
+                width: 100%;
+                height: auto;
+                max-height: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <h2><img src="favicon.jpg", width="50px", height="50px">StreamFlix</h2>
+            <ul class="sidebar-nav">
+                <li class="nav-item" data-page="home">
+                    <span class="nav-icon">🏠</span>首页
+                </li>
+                <li class="nav-item" data-page="hot">
+                    <span class="nav-icon">🔥</span>热门
+                </li>
+                <li class="nav-item" data-page="categories">
+                    <span class="nav-icon">📁</span>分类
+                </li>
+                <li class="nav-item" data-page="dynamic">
+                    <span class="nav-icon">📝</span>动态
+                </li>
+                <li class="nav-item" data-page="favorites">
+                    <span class="nav-icon">⭐</span>收藏
+                </li>
+                <li class="nav-item" data-page="history">
+                    <span class="nav-icon">🕒</span>历史
+                </li>
+                <li class="nav-item active" data-page="messages">
+                    <span class="nav-icon">💌</span>消息
+                </li>
+                <li class="nav-item" data-page="profile">
+                    <span class="nav-icon">👤</span>个人主页
+                </li>
+                <li class="nav-item" data-page="upload">
+                    <span class="nav-icon">📤</span>投稿
+                </li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="header-search">
+                    <input type="text" class="search-input" placeholder="搜索视频、UP主...">
+                </div>
+                <div class="header-actions" id="headerActions">
+                    <!-- 由JavaScript动态填充 -->
+                </div>
+            </header>
+
+            <div class="content-area">
+                <div class="messages-container">
+                    <div class="message-tabs">
+                        <div class="message-tab active" data-type="all">
+                            全部消息
+                            <span class="unread-badge" id="allUnreadCount" style="display: none;">0</span>
+                        </div>
+                        <div class="message-tab" data-type="likes">
+                            点赞
+                            <span class="unread-badge" id="likesUnreadCount" style="display: none;">0</span>
+                        </div>
+                        <div class="message-tab" data-type="comments">
+                            评论
+                            <span class="unread-badge" id="commentsUnreadCount" style="display: none;">0</span>
+                        </div>
+                        <div class="message-tab" data-type="mentions">
+                            @我
+                            <span class="unread-badge" id="mentionsUnreadCount" style="display: none;">0</span>
+                        </div>
+                        <div class="message-tab" data-type="system">
+                            系统通知
+                            <span class="unread-badge" id="systemUnreadCount" style="display: none;">0</span>
+                        </div>
+                    </div>
+
+                    <div class="message-content">
+                        <!-- 消息列表视图 -->
+                        <div id="messageListView">
+                            <div class="message-list" id="messageList">
+                                <!-- 消息将通过JavaScript动态加载 -->
+                            </div>
+                            <div class="empty-messages" id="emptyMessages" style="display: none;">
+                                <p>暂无消息</p>
+                                <p style="margin-top: 10px; font-size: 0.9em;">当有人点赞、评论或@你时，你会收到消息</p>
+                            </div>
+                        </div>
+
+                        <!-- 消息详情视图 -->
+                        <div id="messageDetailView" class="message-detail">
+                            <button class="back-btn" onclick="messageManager.showMessageList()">
+                                ← 返回消息列表
+                            </button>
+                            <div id="messageDetailContent">
+                                <!-- 消息详情将通过JavaScript动态加载 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script defer src="js/dataManager.js"></script>
+    <script defer src="js/auth.js"></script>
+    <script defer src="js/navigation.js"></script>
+    <script defer src="js/hotfix.js"></script>
+    <script defer src="js/message.js"></script>
+</body>
+</html>
