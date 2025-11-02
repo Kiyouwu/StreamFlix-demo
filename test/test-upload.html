@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>测试上传并播放 - Test Upload</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;padding:20px}
+    .btn{display:inline-block;padding:10px 16px;border-radius:6px;background:#4A90E2;color:#fff;border:none;cursor:pointer}
+    .status{margin-top:12px;padding:10px;border-radius:6px;background:#f5f5f5}
+    a{color:#4A90E2}
+  </style>
+</head>
+<body>
+  <h2>测试：抓取示例视频并存入 IndexedDB，然后打开播放页面</h2>
+  <p>说明：该页面会从线上抓取一个小体积的示例 MP4（1MB），然后调用 <code>storageManager.storeVideo</code> 保存并在 <code>dataManager</code> 中创建视频条目。</p>
+
+  <div>
+    <button id="btnFetch" class="btn">抓取并存储测试视频</button>
+    <button id="btnFetchNoDB" class="btn" style="background:#6c757d">抓取并使用 Blob URL（不写入 IndexedDB）</button>
+  </div>
+
+  <hr />
+
+  <div>
+    <label for="localFileInput">选择本地视频文件进行测试：</label>
+    <input id="localFileInput" type="file" accept="video/*" />
+    <button id="btnLocalUpload" class="btn" style="background:#27ae60">使用本地文件并存储</button>
+    <button id="btnLocalChunkUpload" class="btn" style="background:#ff8c00">使用分片上传（Chunk）</button>
+  </div>
+
+  <div id="status" class="status">状态：等待操作</div>
+
+  <script>
+    const statusEl = document.getElementById('status');
+
+    function setStatus(msg){
+      statusEl.textContent = '状态：' + msg;
+      console.log(msg);
+    }
+
+    async function ensureDeps(){
+      if (!window.dataManager){
+        setStatus('等待 dataManager 初始化...');
+        // 等待 up to 5s
+        const start = Date.now();
+        while(!window.dataManager && Date.now()-start < 5000){
+          await new Promise(r=>setTimeout(r,200));
+        }
+      }
+      if (!window.storageManager){
+        setStatus('等待 storageManager 初始化...');
+        const start = Date.now();
+        while(!window.storageManager && Date.now()-start < 5000){
+          await new Promise(r=>setTimeout(r,200));
+        }
+      }
+
+      if (!window.dataManager){
+        throw new Error('dataManager 未就绪');
+      }
+    }
+
+    async function fetchAndStore(useIndexedDB = true){
+      try{
+        setStatus('开始抓取远程示例视频...');
+        // 示例文件（体积小，适合测试）
+        const sampleUrl = 'https://sample-videos.com/video123/mp4/240/big_buck_bunny_240p_1mb.mp4';
+
+        const resp = await fetch(sampleUrl);
+        if (!resp.ok) throw new Error('下载失败: ' + resp.status);
+        const blob = await resp.blob();
+
+        setStatus(`已下载，大小 ${Math.round(blob.size/1024)} KB`);
+
+        const videoRecordId = 'video_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+        const storedBlobId = 'video_file_test_' + Date.now();
+
+        let videoUrl = '';
+
+        if (useIndexedDB && window.storageManager && window.storageManager.isSupported){
+          setStatus('尝试将视频写入 IndexedDB（storageManager.storeVideo）...');
+          await window.storageManager.initialize().catch(()=>{});
+          try{
+            await window.storageManager.storeVideo(storedBlobId, blob);
+            // videoUrl 使用 indexeddb: 标识
+            videoUrl = `indexeddb:${storedBlobId}`;
+            setStatus('写入 IndexedDB 成功，id=' + storedBlobId);
+          }catch(err){
+            console.warn('写入 IndexedDB 失败，回退到 Blob URL', err);
+            videoUrl = window.createObjectURLTracked ? window.createObjectURLTracked(blob) : URL.createObjectURL(blob);
+            setStatus('回退使用 Blob URL');
+          }
+        } else {
+          setStatus('storageManager 不可用，使用 Blob URL（临时）');
+          videoUrl = window.createObjectURLTracked ? window.createObjectURLTracked(blob) : URL.createObjectURL(blob);
+        }
+
+        // 创建视频元数据并保存到 dataManager
+        const currentUser = (window.authManager && typeof authManager.getCurrentUser === 'function') ? authManager.getCurrentUser() : (window.currentUser || window.dataManager.getAllUsers ? window.dataManager.getAllUsers()[0] : { id: 'user_test', username: 'test' });
+
+        const videoMeta = {
+          id: videoRecordId,
+          title: '测试视频 - 存储与播放 (' + new Date().toLocaleString() + ')',
+          description: '由 test-upload.html 脚本自动创建的测试视频',
+          authorId: currentUser?.id || 'user_test',
+          authorName: currentUser?.username || 'test',
+          cover: '',
+          videoUrl: videoUrl,
+          views: 0,
+          likes: 0,
+          likedBy: [],
+          comments: [],
+          tags: ['test','upload'],
+          category: '测试',
+          uploadTime: new Date().toISOString(),
+          privacy: 'public'
+        };
+
+        // 写入 DataManager
+        setStatus('正在将视频元数据写入 dataManager...');
+        if (!window.dataManager) throw new Error('dataManager 未就绪');
+
+        const created = window.dataManager.video.create(videoMeta);
+        if (!created) throw new Error('dataManager.video.create 返回失败');
+
+        setStatus('已创建视频记录：' + videoRecordId + '，即将打开播放页');
+
+        // 打开播放页面
+        setTimeout(()=>{
+          window.open(`../video-play.html?id=${videoRecordId}`,'_blank');
+        }, 800);
+
+      }catch(err){
+        console.error(err);
+        setStatus('出错：' + (err && err.message ? err.message : String(err)));
+        alert('测试出错，请查看控制台 (F12)');
+      }
+    }
+
+    document.getElementById('btnFetch').addEventListener('click', async ()=>{
+      try{
+        setStatus('准备中...');
+        await ensureDeps();
+        await fetchAndStore(true);
+      }catch(err){
+        console.error(err);
+        setStatus('失败：' + err.message);
+        alert('初始化依赖失败，请确保在 http(s) 环境下打开页面，并且 dataManager/storageManager 已加载');
+      }
+    });
+
+    document.getElementById('btnFetchNoDB').addEventListener('click', async ()=>{
+      try{
+        setStatus('准备中...');
+        await ensureDeps();
+        await fetchAndStore(false);
+      }catch(err){
+        console.error(err);
+        setStatus('失败：' + err.message);
+        alert('初始化依赖失败，请确保在 http(s) 环境下打开页面，并且 dataManager/storageManager 已加载');
+      }
+    });
+
+    // 本地文件上传并存储（不依赖远程 fetch）
+    document.getElementById('btnLocalUpload').addEventListener('click', async ()=>{
+      try{
+        setStatus('准备本地文件上传...');
+        await ensureDeps();
+
+        const input = document.getElementById('localFileInput');
+        if (!input || !input.files || input.files.length === 0) {
+          alert('请先选择一个本地视频文件');
+          setStatus('未选择文件');
+          return;
+        }
+
+        const file = input.files[0];
+        if (!file.type.startsWith('video/')) {
+          alert('请选择一个视频文件');
+          setStatus('所选文件不是视频');
+          return;
+        }
+
+        setStatus(`已选择文件 ${file.name} (${Math.round(file.size/1024)} KB)，开始存储...`);
+
+        const videoRecordId = 'video_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+        const storedBlobId = 'video_file_local_' + Date.now();
+
+        let videoUrl = '';
+        if (window.storageManager && window.storageManager.isSupported) {
+          try{
+            await window.storageManager.initialize().catch(()=>{});
+            await window.storageManager.storeVideo(storedBlobId, file);
+            videoUrl = `indexeddb:${storedBlobId}`;
+            setStatus('写入 IndexedDB 成功，id=' + storedBlobId);
+          }catch(err){
+            console.warn('写入 IndexedDB 失败，回退到 Blob URL', err);
+            videoUrl = window.createObjectURLTracked ? window.createObjectURLTracked(file) : URL.createObjectURL(file);
+            setStatus('回退使用 Blob URL');
+          }
+        } else {
+          videoUrl = window.createObjectURLTracked ? window.createObjectURLTracked(file) : URL.createObjectURL(file);
+          setStatus('storageManager 不可用，使用 Blob URL（临时）');
+        }
+
+        const currentUser = (window.authManager && typeof authManager.getCurrentUser === 'function') ? authManager.getCurrentUser() : (window.currentUser || window.dataManager.getAllUsers ? window.dataManager.getAllUsers()[0] : { id: 'user_test', username: 'test' });
+
+        const videoMeta = {
+          id: videoRecordId,
+          title: '本地测试视频 - ' + file.name,
+          description: '由本地上传测试创建',
+          authorId: currentUser?.id || 'user_test',
+          authorName: currentUser?.username || 'test',
+          cover: '',
+          videoUrl: videoUrl,
+          views: 0,
+          likes: 0,
+          likedBy: [],
+          comments: [],
+          tags: ['local','test'],
+          category: '测试',
+          uploadTime: new Date().toISOString(),
+          privacy: 'public'
+        };
+
+        setStatus('正在将视频元数据写入 dataManager...');
+        if (!window.dataManager) throw new Error('dataManager 未就绪');
+
+        const created = window.dataManager.video.create(videoMeta);
+        if (!created) throw new Error('dataManager.video.create 返回失败');
+
+        setStatus('已创建视频记录：' + videoRecordId + '，即将打开播放页');
+        setTimeout(()=>{
+          window.open(`../video-play.html?id=${videoRecordId}`,'_blank');
+        }, 800);
+
+      }catch(err){
+        console.error(err);
+        setStatus('本地上传出错：' + (err && err.message ? err.message : String(err)));
+        alert('本地上传出错，请查看控制台 (F12)');
+      }
+    });
+
+    // 使用分片（chunked）上传示例
+    document.getElementById('btnLocalChunkUpload').addEventListener('click', async ()=>{
+      try{
+        setStatus('准备分片上传...');
+        await ensureDeps();
+
+        const input = document.getElementById('localFileInput');
+        if (!input || !input.files || input.files.length === 0) {
+          alert('请先选择一个本地视频文件');
+          setStatus('未选择文件');
+          return;
+        }
+
+        const file = input.files[0];
+        if (!file.type.startsWith('video/')) {
+          alert('请选择一个视频文件');
+          setStatus('所选文件不是视频');
+          return;
+        }
+
+        setStatus(`已选择文件 ${file.name} (${Math.round(file.size/1024)} KB)，开始分片存储...`);
+
+        const largeId = 'large_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+
+        if (!window.storageManager || !window.storageManager.storeLargeFile) {
+          alert('当前 storageManager 不支持分片存储，请检查 storageManager.js');
+          return;
+        }
+
+        // chunkSize 可调整，例如 5MB
+        const chunkSize = 5 * 1024 * 1024;
+        await window.storageManager.storeLargeFile(largeId, file, chunkSize);
+        setStatus('分片写入完成，manifest id=' + largeId);
+
+        // 在 dataManager 中创建视频记录指向 indexeddb:manifest
+        const currentUser = (window.authManager && typeof authManager.getCurrentUser === 'function') ? authManager.getCurrentUser() : (window.currentUser || window.dataManager.getAllUsers ? window.dataManager.getAllUsers()[0] : { id: 'user_test', username: 'test' });
+
+        const videoMeta = {
+          id: 'video_' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
+          title: '分片测试视频 - ' + file.name,
+          description: '由分片上传测试创建',
+          authorId: currentUser?.id || 'user_test',
+          authorName: currentUser?.username || 'test',
+          cover: '',
+          videoUrl: `indexeddb:${largeId}`,
+          views: 0,
+          likes: 0,
+          likedBy: [],
+          comments: [],
+          tags: ['chunk','test'],
+          category: '测试',
+          uploadTime: new Date().toISOString(),
+          privacy: 'public'
+        };
+
+        const created = window.dataManager.video.create(videoMeta);
+        if (!created) throw new Error('dataManager.video.create 返回失败');
+
+        setStatus('已创建视频记录：' + videoMeta.id + '，即将打开播放页');
+        setTimeout(()=>{ window.open(`../video-play.html?id=${videoMeta.id}`,'_blank'); }, 800);
+
+      }catch(err){
+        console.error(err);
+        setStatus('分片上传出错：' + (err && err.message ? err.message : String(err)));
+        alert('分片上传出错，请查看控制台 (F12)');
+      }
+    });
+  </script>
+</body>
+</html>

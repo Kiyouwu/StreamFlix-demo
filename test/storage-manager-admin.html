@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>StorageManager 管理页</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;padding:20px}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:8px;border:1px solid #ddd;text-align:left}
+    .btn{padding:6px 10px;border-radius:6px;background:#4A90E2;color:#fff;border:none;cursor:pointer}
+    .btn-danger{background:#e74c3c}
+    .muted{color:#666;font-size:0.9em}
+    .row-actions{display:flex;gap:8px}
+  </style>
+</head>
+<body>
+  <h2>StorageManager 管理</h2>
+  <div id="status">初始化中...</div>
+  <div style="margin-top:12px">
+    <button id="btnRefresh" class="btn">刷新列表</button>
+    <button id="btnClearAll" class="btn btn-danger">删除所有视频（慎重）</button>
+    <button id="btnRevoke" class="btn" style="background:#6c757d">撤销所有 Blob URL</button>
+  </div>
+
+  <table id="videosTable">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>上传时间</th>
+        <th>大小</th>
+        <th>类型</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    const tbody = document.querySelector('#videosTable tbody');
+
+    function setStatus(msg){ statusEl.textContent = msg; console.log(msg); }
+
+    async function ensureInit(){
+      setStatus('等待 StorageManager 和 DataManager 初始化...');
+      const start = Date.now();
+      while((!window.storageManager || !window.dataManager) && Date.now()-start < 5000){
+        await new Promise(r=>setTimeout(r,200));
+      }
+
+      if (!window.storageManager){
+        setStatus('storageManager 未加载或不支持 IndexedDB');
+        return false;
+      }
+
+      try{
+        await window.storageManager.initialize().catch(()=>{});
+      }catch(e){
+        console.warn('storageManager initialize 报错', e);
+      }
+
+      setStatus('就绪: ' + JSON.stringify(window.storageManager.getSupportStatus()));
+      return true;
+    }
+
+    async function loadList(){
+      tbody.innerHTML = '';
+      setStatus('加载列表中...');
+      try{
+        if (!window.storageManager || typeof window.storageManager.getAllVideos !== 'function'){
+          setStatus('storageManager 未提供 getAllVideos()，请确保已更新 storageManager.js');
+          return;
+        }
+
+        const list = await window.storageManager.getAllVideos();
+        if (!list || list.length === 0){
+          setStatus('未找到任何视频记录');
+          return;
+        }
+
+        setStatus(`找到 ${list.length} 条记录`);
+
+        list.forEach(rec => {
+          const tr = document.createElement('tr');
+          const idTd = document.createElement('td'); idTd.textContent = rec.id || '';
+          const timeTd = document.createElement('td'); timeTd.textContent = rec.uploadTime ? new Date(rec.uploadTime).toLocaleString() : (rec.uploadTime || '');
+          const sizeTd = document.createElement('td'); sizeTd.textContent = rec.file && rec.file.size ? Math.round(rec.file.size/1024) + ' KB' : (rec.file ? '未知' : '-');
+          const typeTd = document.createElement('td'); typeTd.textContent = rec.file && rec.file.type ? rec.file.type : '-';
+          const actionTd = document.createElement('td');
+
+          const rowActions = document.createElement('div'); rowActions.className = 'row-actions';
+
+          const btnPlay = document.createElement('button'); btnPlay.className='btn'; btnPlay.textContent='在新页播放';
+          btnPlay.addEventListener('click', ()=>{
+            // 创建临时 Blob URL 并打开 video-play.html?debug_blob=... 作为回退
+            if (rec.file) {
+              const url = window.createObjectURLTracked ? window.createObjectURLTracked(rec.file) : URL.createObjectURL(rec.file);
+              // 打开一个简单页面播放 Blob URL
+              const w = window.open('','_blank');
+              w.document.write(`<video controls autoplay style="width:100%;height:80vh;" src="${url}"></video>`);
+            } else {
+              alert('记录中无 file 字段');
+            }
+          });
+
+          const btnDelete = document.createElement('button'); btnDelete.className='btn btn-danger'; btnDelete.textContent='删除';
+          btnDelete.addEventListener('click', async ()=>{
+            if (!confirm('确认删除 ' + (rec.id||'') + ' ?')) return;
+            try{
+              await window.storageManager.deleteVideo(rec.id);
+              setStatus('已删除 ' + rec.id);
+              loadList();
+            }catch(e){
+              console.error(e);
+              alert('删除失败：' + (e && e.message ? e.message : e));
+            }
+          });
+
+          rowActions.appendChild(btnPlay);
+          rowActions.appendChild(btnDelete);
+
+          actionTd.appendChild(rowActions);
+
+          tr.appendChild(idTd);
+          tr.appendChild(timeTd);
+          tr.appendChild(sizeTd);
+          tr.appendChild(typeTd);
+          tr.appendChild(actionTd);
+
+          tbody.appendChild(tr);
+        });
+
+      }catch(err){
+        console.error(err);
+        setStatus('加载失败：' + (err && err.message ? err.message : err));
+      }
+    }
+
+    document.getElementById('btnRefresh').addEventListener('click', async ()=>{
+      await loadList();
+    });
+
+    document.getElementById('btnClearAll').addEventListener('click', async ()=>{
+      if (!confirm('确定删除所有视频记录并释放存储？此操作不可恢复。')) return;
+      try{
+        const list = await window.storageManager.getAllVideos();
+        for (const rec of list){
+          try{ await window.storageManager.deleteVideo(rec.id); } catch(e){ console.warn('删除失败', rec.id, e); }
+        }
+        setStatus('已尝试删除所有记录');
+        loadList();
+      }catch(e){ console.error(e); alert('清除失败: ' + e.message); }
+    });
+
+    document.getElementById('btnRevoke').addEventListener('click', ()=>{
+      if (window.revokeAllObjectUrls) {
+        window.revokeAllObjectUrls();
+        setStatus('已撤销所有受管控的 Blob URL');
+      } else {
+        setStatus('无受管控的 Blob URL');
+      }
+    });
+
+    // 初始化
+    (async ()=>{
+      const ok = await ensureInit();
+      if (ok) await loadList();
+    })();
+  </script>
+</body>
+</html>

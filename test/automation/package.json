@@ -1,0 +1,14 @@
+{
+  "name": "streamflix-avatar-test",
+  "version": "1.0.0",
+  "description": "Automation test for avatar storage and cleanup",
+  "main": "run-avatar-test.js",
+  "scripts": {
+    "test:avatar": "node run-avatar-test.js"
+  },
+  "author": "automation",
+  "license": "MIT",
+  "dependencies": {
+    "puppeteer": "^21.0.0"
+  }
+}
