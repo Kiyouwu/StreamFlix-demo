@@ -214,7 +214,7 @@ class NavigationManager {
                 // 将消息按钮放在头像左侧，以便于用户快速访问消息中心
                 headerActions.innerHTML = `
                     <div id="avatarContainer" class="avatar-container" style="display:flex; align-items:center; width:100%; justify-content:flex-end; gap:8px;">
-                        <button class="icon-btn" id="headerMessageBtn" title="消息" onclick="window.location.href='message.html'"><div><p1><img src="assets/messageIcon.png", width="25px", height="25px"></p1></div><p2>消息</p2><span id="messageBadge" class="message-badge" style="display: none"; font-size:0.7em; margin-left:4px;style='color:bule';"></span></button>
+                        <button class="icon-btn" id="headerMessageBtn" title="消息" onclick="window.location.href='message.html' style='colour:bule'"><div><p1><img src="assets/messageIcon.png", width="25px", height="25px"></p1></div><p2>消息</p2><span id="messageBadge" class="message-badge" style="display: none"; font-size:0.7em; margin-left:4px;"></span></button>
                         <button class="icon-btn" id="headerDyanamicBtn" title="动态" onclick="window.location.href='dynamic.html'"><div><p1><img src="assets/dynamicIcon.png", width="25px", height="25px"></p1></div><p2>动态</p2><span id="dynamicBadge" class="dynamic-badge" style="display: none"; font-size:0.7em; margin-left:4px;"></span></button>
                         <button class="icon-btn" id="headerFavoritesBtn" title="收藏" onclick="window.location.href='profile.html?tab=favorites'"><div><p1><img src="assets/favoritesIcon.png", width="25px", height="25px"></p1></div><p2>收藏</p2><span id="favoritesBadge" class="favorites-badge" style="display: none"; font-size:0.7em; margin-left:4px;"></span></button>
                         <button class="icon-btn" id="headerHistoryBtn" title="历史" onclick="window.location.href='history.html'"><div><p1><img src="assets/historyIcon.png", width="25px", height="25px"></p1></div><p2>历史</p2><span id="historyBadge" class="history-badge" style="display: none"; font-size:0.7em; margin-left:4px;"></span></button>
@@ -451,4 +451,5 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = { NavigationManager, initializeNavigation };
 
 }
+
 
